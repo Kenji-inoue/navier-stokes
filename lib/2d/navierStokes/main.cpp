@@ -1,8 +1,11 @@
 #include "NavierStokes2d.h"
 #include "FieldUtil.h"
 #include "FileUtil.h"
+#include "Hdf5Util.h"
 #include <stdexcept>
 #include <iostream>
+#include <filesystem>
+#include <string>
 
 void setInflowBoundaryCondition(Velocity2d& f, int meshX, int meshY) {
     for (int j = 0; j < meshY; j++) {
@@ -46,31 +49,36 @@ void defineObject(Object& object, int meshX, int meshY) {
 }
 
 int main() {
-    int meshX = 128 + 3;
-    int meshY = 64 + 3;
-    double reynolds = 200;
-    double dx = 16.0 / (Value)(meshX - 3);
-    double dy = dx;
-    double dt = 0.5 * dx / 4.0;
-    AnalysisResult result;
-    double omega = 1.0;
-    double epsilon = 1e-7;
-    double pRef = 1.0;
-    int poissonIteration = 99999;
-    MeshRange2d range = {1, meshX - 3, 1, meshY - 3};
-    FieldUtil::InitializeField(result.f.u, meshX, meshY, 0);
-    FieldUtil::InitializeField(result.f.v, meshX, meshY, 0);
-    FieldUtil::InitializeField(result.p, meshX, meshY, 0);
-    FieldUtil::InitializeField(result.s, meshX, meshY, 0);
-    FieldUtil::InitializeField(result.rot, meshX, meshY, 0);
-    setInflowBoundaryCondition(result.f, meshX, meshY);
-    result.drag.x = 0.0;
-    result.drag.y = 0.0;
-
-    Object object;
-    defineObject(object, meshX, meshY);
 
     try {
+        std::filesystem::path configFile = std::filesystem::current_path() / "flow.h5";
+        Hdf5Util config(configFile.string());
+        int meshX, meshY;
+        config.readIntConfig("meshX", meshX);
+        config.readIntConfig("meshY", meshY);
+        double reynolds = 200;
+        double dx = 16.0 / (Value)(meshX - 3);
+        double dy = dx;
+        double dt = 0.5 * dx / 4.0;
+        AnalysisResult result;
+        double omega = 1.0;
+        double epsilon = 1e-7;
+        double pRef = 1.0;
+        int poissonIteration = 99999;
+        MeshRange2d range = {1, meshX - 3, 1, meshY - 3};
+        FieldUtil::InitializeField(result.f.u, meshX, meshY, 0);
+        FieldUtil::InitializeField(result.f.v, meshX, meshY, 0);
+        FieldUtil::InitializeField(result.p, meshX, meshY, 0);
+        FieldUtil::InitializeField(result.s, meshX, meshY, 0);
+        FieldUtil::InitializeField(result.rot, meshX, meshY, 0);
+        setInflowBoundaryCondition(result.f, meshX, meshY);
+        result.drag.x = 0.0;
+        result.drag.y = 0.0;
+
+        Object object;
+        defineObject(object, meshX, meshY);
+
+
         NavierStokes2d solver(meshX, meshY, reynolds, dx, dy, dt,
                              omega, epsilon, pRef, poissonIteration, 
                              range, result, object);

@@ -1,5 +1,16 @@
 project(Util LANGUAGES CXX C)
 
+set(CMAKE_PREFIX_PATH "C:/Program Files/HDF_Group/HDF5/1.14.6/cmake")
+find_package(HDF5 REQUIRED COMPONENTS C CXX HL)
+
 add_library(${PROJECT_NAME}
-                FieldUtil.cpp
-                FileUtil.cpp)
+    Hdf5Util.cpp
+    FieldUtil.cpp
+    FileUtil.cpp
+)
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${HDF5_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PUBLIC
+    ${HDF5_LIBRARIES}
+    ${HDF5_HL_LIBRARIES}
+)

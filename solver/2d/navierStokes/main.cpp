@@ -48,58 +48,66 @@ void defineObject(Object& object, int meshX, int meshY) {
     }
 }
 
-int main() {
+void readConfig(Hdf5Util& file, int& meshX, int& meshY, Value& dx, Value& dy, Value& dt,
+                    Value& reynolds, Value& omega, Value& epsilon, Value& pRef,
+                    int& poissonIteration, int& maxIterations, int& interval) {
+    file.readIntConfig("meshX", meshX);
+    file.readIntConfig("meshY", meshY);
+    file.readDoubleConfig("reynolds", reynolds);
+    file.readDoubleConfig("dx", dx);
+    file.readDoubleConfig("dy", dy);
+    file.readDoubleConfig("dt", dt);
+    file.readDoubleConfig("omega", omega);
+    file.readDoubleConfig("epsilon", epsilon);
+    file.readDoubleConfig("pRef", pRef);
+    file.readIntConfig("poissonIteration", poissonIteration);
+    file.readIntConfig("maxIterations", maxIterations);
+    file.readIntConfig("interval", interval);
+}
 
-    try {
-        std::filesystem::path configFile = std::filesystem::current_path() / "flow.h5";
-        Hdf5Util file(configFile.string());
-        int meshX, meshY;
-        file.readIntConfig("meshX", meshX);
-        file.readIntConfig("meshY", meshY);
-        MeshRange2d range = {1, meshX - 3, 1, meshY - 3};
+void InitializeAnalysisResult(AnalysisResult& result, int meshX, int meshY) {
+    FieldUtil::InitializeField(result.f.u, meshX, meshY, 0);
+    FieldUtil::InitializeField(result.f.v, meshX, meshY, 0);
+    setInflowBoundaryCondition(result.f, meshX, meshY);
+    FieldUtil::InitializeField(result.p, meshX, meshY, 0);
+    FieldUtil::InitializeField(result.s, meshX, meshY, 0);
+    FieldUtil::InitializeField(result.rot, meshX, meshY, 0);
+    result.drag.x = 0.0;
+    result.drag.y = 0.0;
+}
 
-        Value dx, dy, dt, reynolds, omega, epsilon, pRef;
-        file.readDoubleConfig("reynolds", reynolds);
-        file.readDoubleConfig("dx", dx);
-        file.readDoubleConfig("dy", dy);
-        file.readDoubleConfig("dt", dt);
-        file.readDoubleConfig("omega", omega);
-        file.readDoubleConfig("epsilon", epsilon);
-        file.readDoubleConfig("pRef", pRef);
+void executeApplication() {
+    std::filesystem::path configFile = std::filesystem::current_path() / "flow.h5";
+    Hdf5Util file(configFile.string());
+    int meshX, meshY, poissonIteration, interval, maxIterations;
+    Value dx, dy, dt, reynolds, omega, epsilon, pRef;
+    readConfig(file, meshX, meshY, dx, dy, dt, reynolds, omega, epsilon, pRef, 
+        poissonIteration, maxIterations, interval);
+    MeshRange2d range = {1, meshX - 3, 1, meshY - 3};
 
-        int poissonIteration, interval, maxIterations;
-        file.readIntConfig("poissonIteration", poissonIteration);
+    AnalysisResult result;
+    InitializeAnalysisResult(result, meshX, meshY);
 
-        AnalysisResult result;
-        FieldUtil::InitializeField(result.f.u, meshX, meshY, 0);
-        FieldUtil::InitializeField(result.f.v, meshX, meshY, 0);
-        FieldUtil::InitializeField(result.p, meshX, meshY, 0);
-        FieldUtil::InitializeField(result.s, meshX, meshY, 0);
-        FieldUtil::InitializeField(result.rot, meshX, meshY, 0);
-        setInflowBoundaryCondition(result.f, meshX, meshY);
-        result.drag.x = 0.0;
-        result.drag.y = 0.0;
+    Object object;
+    defineObject(object, meshX, meshY);
 
-        Object object;
-        defineObject(object, meshX, meshY);
+    NavierStokes2d solver(meshX, meshY, reynolds, dx, dy, dt,
+        omega, epsilon, pRef, poissonIteration, range, result, object);
+    for (int time = 1; time <= maxIterations; time++) {
+        result = solver.calculate();
 
-        NavierStokes2d solver(meshX, meshY, reynolds, dx, dy, dt,
-                             omega, epsilon, pRef, poissonIteration, 
-                             range, result, object);
-
-        file.readIntConfig("maxIterations", maxIterations);
-        file.readIntConfig("interval", interval);
-
-        for (int time = 1; time <= maxIterations; time++) {
-            result = solver.calculate();
-
-            if (time % interval != 0) {
-                continue;
-            }
-
-            file.saveResult(result.rot, "rot", time);
-            printf("dragX = %6.3f, dragY = %6.3f\n", result.drag.x, result.drag.y);
+        if (time % interval != 0) {
+            continue;
         }
+
+        file.saveResult(result.rot, "rot", time);
+        printf("dragX = %6.3f, dragY = %6.3f\n", result.drag.x, result.drag.y);
+    }
+}
+
+int main() {
+    try {
+        executeApplication();
     } catch (const std::runtime_error& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;

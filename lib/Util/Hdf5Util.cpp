@@ -21,3 +21,9 @@ void Hdf5Util::readIntConfig(const std::string& configName, int& value)
     const auto fullPath = m_configDir + configName;
     H5LTread_dataset_int(m_fileId, fullPath.c_str(), &value);
 }
+
+void Hdf5Util::readDoubleConfig(const std::string& configName, double& value)
+{
+    const auto fullPath = m_configDir + configName;
+    H5LTread_dataset_double(m_fileId, fullPath.c_str(), &value);
+}

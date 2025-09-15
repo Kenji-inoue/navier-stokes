@@ -56,16 +56,21 @@ int main() {
         int meshX, meshY;
         config.readIntConfig("meshX", meshX);
         config.readIntConfig("meshY", meshY);
-        double reynolds = 200;
-        double dx = 16.0 / (Value)(meshX - 3);
-        double dy = dx;
-        double dt = 0.5 * dx / 4.0;
-        AnalysisResult result;
-        double omega = 1.0;
-        double epsilon = 1e-7;
-        double pRef = 1.0;
-        int poissonIteration = 99999;
         MeshRange2d range = {1, meshX - 3, 1, meshY - 3};
+
+        Value dx, dy, dt, reynolds, omega, epsilon, pRef;
+        config.readDoubleConfig("reynolds", reynolds);
+        config.readDoubleConfig("dx", dx);
+        config.readDoubleConfig("dy", dy);
+        config.readDoubleConfig("dt", dt);
+        config.readDoubleConfig("omega", omega);
+        config.readDoubleConfig("epsilon", epsilon);
+        config.readDoubleConfig("pRef", pRef);
+
+        int poissonIteration, interval, maxIterations;
+        config.readIntConfig("poissonIteration", poissonIteration);
+
+        AnalysisResult result;
         FieldUtil::InitializeField(result.f.u, meshX, meshY, 0);
         FieldUtil::InitializeField(result.f.v, meshX, meshY, 0);
         FieldUtil::InitializeField(result.p, meshX, meshY, 0);
@@ -78,12 +83,13 @@ int main() {
         Object object;
         defineObject(object, meshX, meshY);
 
-
         NavierStokes2d solver(meshX, meshY, reynolds, dx, dy, dt,
                              omega, epsilon, pRef, poissonIteration, 
                              range, result, object);
-        const int interval = 50;
-        const int maxIterations = 500;
+                             
+        config.readIntConfig("maxIterations", maxIterations);
+        config.readIntConfig("interval", interval);
+
         FileUtil file("result.csv");
         for (int time = 1; time <= maxIterations; time++) {
             result = solver.calculate();

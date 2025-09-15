@@ -52,23 +52,23 @@ int main() {
 
     try {
         std::filesystem::path configFile = std::filesystem::current_path() / "flow.h5";
-        Hdf5Util config(configFile.string());
+        Hdf5Util file(configFile.string());
         int meshX, meshY;
-        config.readIntConfig("meshX", meshX);
-        config.readIntConfig("meshY", meshY);
+        file.readIntConfig("meshX", meshX);
+        file.readIntConfig("meshY", meshY);
         MeshRange2d range = {1, meshX - 3, 1, meshY - 3};
 
         Value dx, dy, dt, reynolds, omega, epsilon, pRef;
-        config.readDoubleConfig("reynolds", reynolds);
-        config.readDoubleConfig("dx", dx);
-        config.readDoubleConfig("dy", dy);
-        config.readDoubleConfig("dt", dt);
-        config.readDoubleConfig("omega", omega);
-        config.readDoubleConfig("epsilon", epsilon);
-        config.readDoubleConfig("pRef", pRef);
+        file.readDoubleConfig("reynolds", reynolds);
+        file.readDoubleConfig("dx", dx);
+        file.readDoubleConfig("dy", dy);
+        file.readDoubleConfig("dt", dt);
+        file.readDoubleConfig("omega", omega);
+        file.readDoubleConfig("epsilon", epsilon);
+        file.readDoubleConfig("pRef", pRef);
 
         int poissonIteration, interval, maxIterations;
-        config.readIntConfig("poissonIteration", poissonIteration);
+        file.readIntConfig("poissonIteration", poissonIteration);
 
         AnalysisResult result;
         FieldUtil::InitializeField(result.f.u, meshX, meshY, 0);
@@ -86,11 +86,10 @@ int main() {
         NavierStokes2d solver(meshX, meshY, reynolds, dx, dy, dt,
                              omega, epsilon, pRef, poissonIteration, 
                              range, result, object);
-                             
-        config.readIntConfig("maxIterations", maxIterations);
-        config.readIntConfig("interval", interval);
 
-        FileUtil file("result.csv");
+        file.readIntConfig("maxIterations", maxIterations);
+        file.readIntConfig("interval", interval);
+
         for (int time = 1; time <= maxIterations; time++) {
             result = solver.calculate();
 
@@ -98,7 +97,7 @@ int main() {
                 continue;
             }
 
-            file.saveField(result.rot, "rot", time, interval);
+            file.saveResult(result.rot, "rot", time);
             printf("dragX = %6.3f, dragY = %6.3f\n", result.drag.x, result.drag.y);
         }
     } catch (const std::runtime_error& e) {

@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # 1d is not used now
-#add_subdirectory(1d/diffusion)
-#add_subdirectory(1d/advection)
+add_subdirectory(1d/diffusion)
+add_subdirectory(1d/advection)
 
 
 # add_subdirectory(2d/advectionDiffusion) # almost same as burgers equation and cannot build this now
@@ -16,3 +16,11 @@ add_subdirectory(2d/navierStokes/burgers)
 add_subdirectory(2d/navierStokes/burgers/diffusion)
 add_subdirectory(2d/navierStokes/burgers/advection)
 add_subdirectory(Util)
+
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)

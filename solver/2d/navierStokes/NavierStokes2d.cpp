@@ -88,22 +88,17 @@ void NavierStokes2d::modifyPressure(Field2d& p, Field2d& dp) {
         }
     }
 
-    // Runoff Boundary Condition
-    for (int j = MESH_RANGE.minY; j <= MESH_RANGE.maxY; j++) {
-        dp[j][MESH_X - 2] = p[j][MESH_X - 3] - p[j][MESH_X - 2];
-        p[j][MESH_X - 2] = p[j][MESH_X - 3];
-    }
 
-    // Inflow Boundary Condition
-    for (int j = 0; j < MESH_Y; j++) {
-        p[j][0] = 0;
-        p[j][1] = 0;
-    }
-    for (int i = 0; i < MESH_X; i++) {
-        p[0][i] = 0;
-        p[1][i] = 0;
-        p[MESH_Y - 1][i] = 0;
-        p[MESH_Y - 2][i] = 0;
+    for (int j = MESH_RANGE.minY; j <= MESH_RANGE.maxY; j++) {
+        for (int i = MESH_RANGE.minX; i <= MESH_RANGE.maxX; i++) {
+            // Runoff Boundary Condition
+            dp[j][MESH_X - 2] = p[j][MESH_X - 3] - p[j][MESH_X - 2];
+            p[j][MESH_X - 2] = p[j][MESH_X - 3];
+
+            // Inflow Boundary Condition
+            p[0][i] = p[1][i];
+            p[MESH_Y - 2][i] = p[MESH_Y - 3][i];
+        }
     }
 }   
 

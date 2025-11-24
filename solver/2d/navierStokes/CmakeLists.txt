@@ -1,8 +1,6 @@
 project(NavierStokes2d LANGUAGES CXX C)
 
-add_executable(${PROJECT_NAME}
-                main.cpp 
-                NavierStokes2d.cpp)
+add_executable(${PROJECT_NAME} main.cpp NavierStokes2d.cpp)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/Util
@@ -15,11 +13,18 @@ target_link_libraries(${PROJECT_NAME} Util Burgers2dLib Poisson2dLib)
 add_executable(${PROJECT_NAME}withoutObject
                 mainWithoutObject.cpp 
                 NavierStokes2d.cpp)
+add_executable(${PROJECT_NAME}test test.cpp NavierStokes2d.cpp)
 
 target_include_directories(${PROJECT_NAME}withoutObject PRIVATE
     ${CMAKE_SOURCE_DIR}/Util
     ${CMAKE_CURRENT_SOURCE_DIR}/burgers
     ${CMAKE_CURRENT_SOURCE_DIR}/poisson
 )
+target_include_directories(${PROJECT_NAME}test PRIVATE
+    ${CMAKE_SOURCE_DIR}/Util
+    ${CMAKE_CURRENT_SOURCE_DIR}/burgers
+    ${CMAKE_CURRENT_SOURCE_DIR}/poisson
+)
 
 target_link_libraries(${PROJECT_NAME}withoutObject Util Burgers2dLib Poisson2dLib)
+target_link_libraries(${PROJECT_NAME}test GTest::gtest_main Util Burgers2dLib Poisson2dLib)

@@ -28,3 +28,4 @@ target_include_directories(${PROJECT_NAME}test PRIVATE
 
 target_link_libraries(${PROJECT_NAME}withoutObject Util Burgers2dLib Poisson2dLib)
 target_link_libraries(${PROJECT_NAME}test GTest::gtest_main Util Burgers2dLib Poisson2dLib)
+add_test(NAME ${PROJECT_NAME}test COMMAND ${PROJECT_NAME}test)

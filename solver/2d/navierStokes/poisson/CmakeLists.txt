@@ -10,3 +10,4 @@ add_executable(${PROJECT_NAME}test test.cpp)
 
 target_link_libraries(${PROJECT_NAME} Util ${PROJECT_NAME}Lib)
 target_link_libraries(${PROJECT_NAME}test GTest::gtest_main Util ${PROJECT_NAME}Lib)
+add_test(NAME ${PROJECT_NAME}test COMMAND ${PROJECT_NAME}test)
